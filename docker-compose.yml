@@ -1,0 +1,30 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: "file:/data/wedding.db"
+      JWT_SECRET: "${JWT_SECRET:-change-me-in-production}"
+      PORT: 4000
+      CORS_ORIGIN: "http://localhost:8080"
+      WEDDING_DATE: "${WEDDING_DATE:-2026-12-12}"
+    volumes:
+      - db-data:/data
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+
+volumes:
+  db-data:

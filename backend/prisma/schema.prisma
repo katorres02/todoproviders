@@ -1,0 +1,75 @@
+// Wedding Operations Manager - Prisma schema
+//
+// Development uses SQLite (no external services needed).
+// For production (Supabase/Neon PostgreSQL) switch the datasource provider
+// to "postgresql" and set DATABASE_URL accordingly. Note: SQLite does not
+// support Prisma enums, so TaskStatus/Priority are validated at the API
+// layer with Zod (PENDING | IN_PROGRESS | COMPLETED, LOW | MEDIUM | HIGH | CRITICAL).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  phone        String?
+  color        String
+  tasks        Task[]
+  comments     Comment[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Provider {
+  id         String   @id @default(cuid())
+  name       String
+  service    String
+  phone      String?
+  email      String?
+  whatsapp   String?
+  address    String?
+  notes      String?
+  contracted Float?
+  paid       Float?
+  tasks      Task[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  status      String    @default("PENDING")
+  priority    String    @default("MEDIUM")
+  dueDate     DateTime?
+  paid        Boolean   @default(false)
+
+  assigneeId String?
+  assignee   User?   @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  providerId String?
+  provider   Provider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+
+  comments  Comment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  text      String
+  taskId    String
+  userId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
