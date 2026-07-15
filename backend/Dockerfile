@@ -1,4 +1,6 @@
-FROM node:20-alpine AS build
+# Debian-based image: Prisma's engines need OpenSSL, which node:*-alpine no longer ships in a compatible version.
+FROM node:20-slim AS build
+RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -8,7 +10,8 @@ COPY tsconfig.json ./
 COPY src ./src
 RUN npm run build
 
-FROM node:20-alpine
+FROM node:20-slim
+RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package*.json ./
