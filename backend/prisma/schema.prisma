@@ -1,17 +1,16 @@
 // Wedding Operations Manager - Prisma schema
 //
-// Development uses SQLite (no external services needed).
-// For production (Supabase/Neon PostgreSQL) switch the datasource provider
-// to "postgresql" and set DATABASE_URL accordingly. Note: SQLite does not
-// support Prisma enums, so TaskStatus/Priority are validated at the API
-// layer with Zod (PENDING | IN_PROGRESS | COMPLETED, LOW | MEDIUM | HIGH | CRITICAL).
+// Uses PostgreSQL (Neon/Supabase). TaskStatus/Priority are plain strings
+// validated at the API layer with Zod (PENDING | IN_PROGRESS | COMPLETED,
+// LOW | MEDIUM | HIGH | CRITICAL) — this keeps the schema portable to
+// SQLite (which lacks enums) by only changing the provider below.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

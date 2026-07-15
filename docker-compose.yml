@@ -2,13 +2,12 @@ services:
   backend:
     build: ./backend
     environment:
-      DATABASE_URL: "file:/data/wedding.db"
+      # Set DATABASE_URL in a root .env file or export it before running compose
+      DATABASE_URL: "${DATABASE_URL:?Set DATABASE_URL to your PostgreSQL connection string}"
       JWT_SECRET: "${JWT_SECRET:-change-me-in-production}"
       PORT: 4000
       CORS_ORIGIN: "http://localhost:8080"
       WEDDING_DATE: "${WEDDING_DATE:-2026-12-12}"
-    volumes:
-      - db-data:/data
     ports:
       - "4000:4000"
     healthcheck:
@@ -25,6 +24,3 @@ services:
         condition: service_healthy
     ports:
       - "8080:80"
-
-volumes:
-  db-data:

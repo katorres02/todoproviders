@@ -14,8 +14,7 @@ Plataforma colaborativa para gestionar las tareas, proveedores, pagos y responsa
 | Gráficos | Recharts |
 | Backend | Node.js + Express + TypeScript |
 | ORM | Prisma |
-| BD desarrollo | SQLite |
-| BD producción | PostgreSQL (Supabase / Neon) |
+| Base de datos | PostgreSQL (Neon / Supabase) |
 | Auth | JWT (email + contraseña, bcrypt) |
 | Tests | Vitest + Supertest |
 
@@ -40,9 +39,9 @@ Requisitos: Node.js 20+.
 ```bash
 # 1. Backend
 cd backend
-cp .env.example .env
+cp .env.example .env    # pon tu DATABASE_URL de PostgreSQL (Neon/Supabase)
 npm install
-npx prisma db push      # crea la BD SQLite
+npx prisma db push      # crea las tablas
 npm run seed            # datos de ejemplo
 npm run dev             # API en http://localhost:4000
 
@@ -58,23 +57,17 @@ npm run dev             # app en http://localhost:5173 (proxy /api -> :4000)
 ## Docker Compose
 
 ```bash
-docker compose up --build
+DATABASE_URL="postgresql://..." docker compose up --build
 # Frontend: http://localhost:8080  (nginx hace proxy de /api al backend)
 # API:      http://localhost:4000
 ```
 
-La base SQLite persiste en el volumen `db-data`. Para cargar datos de ejemplo dentro del contenedor:
-
-```bash
-docker compose exec backend npx tsx prisma/seed.ts
-```
-
-> Nota: la imagen de producción no incluye `tsx`; si quieres seed en Docker usa `docker compose run --rm backend sh -c "npm i tsx && npx tsx prisma/seed.ts"` o siembra desde tu máquina apuntando `DATABASE_URL` al volumen.
+Los datos viven en tu PostgreSQL (Neon/Supabase). Para sembrar datos de ejemplo corre `npm run seed` desde `backend/` en tu máquina.
 
 ## Tests
 
 ```bash
-cd backend && npm test    # 15 tests de API (auth, CRUD, filtros, dashboard) sobre una BD SQLite efímera
+cd backend && npm test    # 15 tests de API sobre un schema "test" aislado (se resetea en cada corrida)
 cd frontend && npm test   # tests unitarios de utilidades
 ```
 
@@ -128,7 +121,6 @@ frontend/
 
 1. **Base de datos** — crea un proyecto en [Supabase](https://supabase.com) o [Neon](https://neon.tech) y copia la cadena de conexión PostgreSQL.
 2. **Backend (Render)** — servicio web sobre `backend/`:
-   - En `prisma/schema.prisma` cambia `provider = "sqlite"` por `"postgresql"` (SQLite no soporta enums de Prisma; los estados ya se validan con Zod, así que no hay más cambios).
    - Build: `npm install && npx prisma generate && npm run build`
    - Start: `npx prisma db push && node dist/index.js` (o usa `prisma migrate deploy` con migraciones)
    - Variables: `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGIN` (URL de Vercel), `WEDDING_DATE`.
@@ -141,6 +133,6 @@ Ver `backend/.env.example` y `frontend/.env.example`.
 
 ## Decisiones y notas
 
-- **SQLite en desarrollo**: Prisma no soporta `enum` en SQLite, por lo que `status`/`priority` son `String` en el esquema y se validan estrictamente con Zod en la API (mismos valores que la spec).
+- **`status`/`priority` como `String` + Zod**: se validan estrictamente en la API (mismos valores que la spec). Esto mantiene el esquema portable a SQLite (que no soporta enums de Prisma) cambiando solo el `provider`.
 - **`assigneeId` opcional**: permite tareas sin responsable y borrar usuarios sin perder sus tareas (`onDelete: SetNull`).
 - **Extras pendientes** (documentados en la spec como opcionales): login con Google, exportar PDF/Excel, notificaciones push, roles.

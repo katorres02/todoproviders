@@ -12,7 +12,7 @@
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
     "seed": "tsx prisma/seed.ts",
-    "test": "DATABASE_URL=file:./prisma/test.db prisma db push --force-reset --skip-generate && DATABASE_URL=file:./prisma/test.db vitest run",
+    "test": "node scripts/run-tests.mjs",
     "lint": "tsc --noEmit"
   },
   "prisma": {
